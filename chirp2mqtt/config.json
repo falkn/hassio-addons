@@ -1,0 +1,39 @@
+{
+  "name": "Chirp I2C",
+  "version": "1",
+  "slug": "chirp2mqtt",
+  "description": "Chirp I2C Soil Moisture sensor reader to MQTT bridge",
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "url": "https://github.com/falkn/addon-chirp2mqtt",
+  "startup": "before",
+  "boot": "auto",
+  "map": ["config:rw", "ssl"],
+  "options": {
+	"mqtt_address" : "mqtt://homeassistant",
+	"mqtt_username" : "mqtt",
+	"mqtt_password" : "gSjTLsaAhoBJLD9BXLyRqTEr",
+    "mqtt_topic": "chirp/c01",
+    "i2c_addr": 32,
+    "moist_min": 222,
+    "moist_max": 577,
+    "temp_offset": 0,
+    "read_period_sec": 600
+  },
+  "schema": {
+    "mqtt_address": "url",
+    "mqtt_username": "str",
+    "mqtt_password": "password",
+    "mqtt_topic": "str",
+    "i2c_addr": "int(0,128)",
+    "moist_min": "int",
+    "moist_max": "int",
+    "temp_offset": "int",
+    "read_period_sec": "int"
+  },
+  "devices": [
+    "/dev/i2c-1:/dev/i2c-1:rwm"
+  ],
+  "auto_uart": "yes",
+  "full_access": "yes",
+  "gpio": "yes"
+}
