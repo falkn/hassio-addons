@@ -2,7 +2,7 @@
   "name": "Chirp I2C",
   "version": "1",
   "slug": "chirp2mqtt",
-  "description": "Soil Moisture Sensor. Read measurements and publish to MQTT.",
+  "description": "Soil Moisture Sensor. Read measurements and publish to MQTT",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "url": "https://github.com/falkn/hassio-addons/tree/master/chirp2mqtt",
   "startup": "before",

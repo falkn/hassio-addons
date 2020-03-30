@@ -55,19 +55,18 @@ Verify by looking ro /dev/i2c-1:
 
 
 ### 3. Install the Addon
-git clone repository.
-Copy the addon into Home Assistant Addon folder using samba share. On Mac OS X this
-looked like:
+In your home assistant, go to Supervisor > Add-on Store. Add new repository URL:
 
-    rsync -r -v addon-chirp2mqtt/* /Volumes/addons/chirp2mqtt/
+    https://github.com/falkn/hassio-addons
 
-Go to your Home Assistant Add-On Store and click refresh. The Chirp I2C Add-on
-should be found under "Local Add-ons". Click Install.
+You should find the "Chirp I2C" Add-on. Click Install & Build.
 
-TODO: See if this can be added to Home Assistant Add-on store.
+TODO: Figure out how to pre-build images and put on dockerhub.
+
+### 4. Configure Add-on
 
 Configure addon setting the options.json, particularly the mqtt broker
-username and password:
+username and password (how do this addon connect to the mqtt broker?):
 
         mqtt_address: 'mqtt://homeassistant'
         mqtt_username: mqtt
@@ -79,7 +78,7 @@ The [Developer Tools Add-On](
     https://www.home-assistant.io/docs/tools/dev-tools/) has an MQTT
 inspection that is useful to see what's published on MQTT. 
 
-### 4. Configure Home Assistant Sensor
+### 5. Configure Home Assistant Sensor
 The sensor can then be added to Home Assistant as an MQTT sensor. Update
 configuration.yaml. Example:
 
@@ -99,7 +98,7 @@ configuration.yaml. Example:
       value_template: "{{ value_json.moist_percent }}"
       device_class: "humidity"
       unit_of_measurement: "%"
-  
+
 
 ## Options
 All supported options.
