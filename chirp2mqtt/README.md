@@ -17,8 +17,6 @@ You need the following:
       https://www.home-assistant.io/hassio/installation/) installed.
 *   Add-ons installed
     *    [MQTT Broker](https://www.home-assistant.io/docs/mqtt/broker/)
-    *    [Samba share](
-           https://github.com/home-assistant/hassio-addons/tree/master/samba)
 *   The Chirp i2c sensor
 
 
@@ -51,7 +49,7 @@ Verify by looking ro /dev/i2c-1:
 
     ssh -p 22222 root@hassio.local
     login
-    ls /dev/i2c-*  # doesn't show any.
+    ls /dev/i2c-*  # i2c-1 should now exist. 
 
 
 ### 3. Install the Addon
