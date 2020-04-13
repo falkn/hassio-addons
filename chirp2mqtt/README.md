@@ -8,7 +8,7 @@ Reads temperature and soil moisture using the i2c sensor [Chirp](
 publishes the measurements
 to an MQTT topic.
 
-![screenshot](screenshot.png)
+![screenshot](images/screenshot.png)
 
 ## Installation
 You need the following:
