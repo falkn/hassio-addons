@@ -1,6 +1,6 @@
 {
   "name": "Chirp I2C",
-  "version": "1",
+  "version": "1.0.1",
   "slug": "chirp2mqtt",
   "description": "Soil Moisture Sensor. Read measurements and publish to MQTT",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
