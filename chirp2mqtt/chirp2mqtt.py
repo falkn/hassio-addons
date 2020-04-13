@@ -32,6 +32,8 @@ sys.path.insert(1, 'chirp-rpi')
 import chirp
 
 LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
+
 MQTT_JSON_TEMPLATE = (
   '{{'
   '  "temp": {:3.1f}, '
@@ -39,6 +41,15 @@ MQTT_JSON_TEMPLATE = (
   '  "moist_cond": {:3.0f}'
   '}}'
 )
+
+
+def init_logger_stdout():
+  handler = logging.StreamHandler(sys.stdout)
+  handler.setLevel(logging.INFO)
+  formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+  handler.setFormatter(formatter)
+  LOG.addHandler(handler)
 
 
 def init_chirp(options_json):
@@ -90,6 +101,7 @@ def poll_chirp(chrp, mqtt_client, mqtt_topic):
 
 
 def main():
+  init_logger_stdout()
   LOG.info('Chirp2mqtt starting...')
 
   LOG.info('Reading options.json')
