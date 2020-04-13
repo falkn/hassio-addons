@@ -11,7 +11,7 @@
   "options": {
 	"mqtt_address" : "mqtt://homeassistant",
 	"mqtt_username" : "mqtt",
-	"mqtt_password" : "gSjTLsaAhoBJLD9BXLyRqTEr",
+	"mqtt_password" : "",
     "mqtt_topic": "chirp/c01",
     "i2c_addr": 32,
     "moist_min": 222,
