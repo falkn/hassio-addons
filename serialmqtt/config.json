@@ -1,6 +1,6 @@
 {
   "name": "Serial MQTT Bridge",
-  "version": "1",
+  "version": "0.1",
   "slug": "serial_mqtt_bridge",
   "description": "Bridges UART serial port to and from MQTT",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
