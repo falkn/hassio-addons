@@ -11,11 +11,11 @@ inspired by [serial2mqtt](https://github.com/vortex314/serial2mqtt).
 Example setup with a Raspberry Pi running Hass.io and Home Assistant and a
 ESP8266 connected with serial, that communicates with some sensors.
 
-![exampe setup](images/example-setup.png)
+![exampe setup][example-setup]
 
 Screenshot from Home Assistant using the Arduino Test Bed status.
 
-![screenshot](images/screenshot.png)
+![screenshot][screenshot]
 
 # Installation
 
