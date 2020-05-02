@@ -3,6 +3,7 @@
   "version": "0.1",
   "slug": "serial_mqtt_bridge",
   "description": "Bridges UART serial port to and from MQTT",
+  "url": "https://github.com/falkn/hassio-addons/tree/master/serialmqtt",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "startup": "before",
   "boot": "auto",
