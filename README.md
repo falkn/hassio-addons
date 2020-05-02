@@ -5,5 +5,5 @@ Repository for hass.io add-ons
 
 Contains the add-ons:
 
-* [chrip2mqtt](chirp2mqtt/README.md)
+* [chirp2mqtt](chirp2mqtt/README.md)
 * [serialmqtt](serialmqtt/README.md)
