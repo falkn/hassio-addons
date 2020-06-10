@@ -97,7 +97,7 @@ def poll_chirp(chrp, mqtt_client, mqtt_topic):
     chrp.temp, chrp.moist_percent, chrp.moist)
 
   mqtt_client.publish(mqtt_topic, mqtt_json)
-  LOG.info('Published topic %s message %s', (mqtt_topic, mqtt_json))
+  LOG.info('Published topic %s message %s', mqtt_topic, mqtt_json)
 
 
 def main():

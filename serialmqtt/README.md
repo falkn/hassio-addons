@@ -46,7 +46,7 @@ You may use the arduino_testbed sketch to test the communication.
 | serial_baud |  int | 74880 | Baud rate to use for serial port. |
 
 # Interface
-The protocol on the serial port uses JSON with one line per message.
+The protocol on the serial port uses utf-8 JSON with one line per message.
 
 ## Read from Serial
 The Arduino (or serial device) has to send a JSON message with the fields:
@@ -60,14 +60,14 @@ Example:
 
     {"topic": "bresser/ch2", "msg": {"battery": 1, "temp": 249, "humidity":29}}
 
-This message will be published on `areduino/read/bresser/ch2` with the default
+This message will be published on `arduino/read/bresser/ch2` with the default
 config for `mqtt_publish_topic`.
 
 Any serial output from the arduino that is not valid json ends up in
 `$mqtt_publish_topic/log`, default `arduino/read/log`.
 
 ## Write to Serial
-Any message to the topic `mqtt_subscribe_topic` or sub-topics will be written
+Any message to the topic `mqtt_subscribe_topic` or sub-topics will be forwarded
 as a one-line JSON serial message with the fields:
 
 *   `topic` - sub MQTT topic.
@@ -77,12 +77,14 @@ Example:
 
     {"topic": "rcswitch/ch2", "msg": {"state": "ON"}}
 
+Newlines will be escaped with \\n.
+
 # Arduino Test Bed
 To test this addon, you can upload the `arduino_testbed` sketch to your connected
-NodeMCU (ESP8266). This sends a status message every 10 seconds containing uptime and
-CPU voltage.
+Arduino (NodeMCU / ESP8266). This sends a status message every 10 seconds containing uptime and
+CPU voltage to `arduino/read/status`. It echoes any message sent to it to `arduino/read/echo`.
 
-To hook the status up to Home Assistant sensors, you can add this to your configuration.json
+To hook up the status to Home Assistant sensors, you can add this to your configuration.json
 
     sensor arduino_uptime:
       platform: mqtt
