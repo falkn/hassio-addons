@@ -24,6 +24,7 @@ LOG.setLevel(logging.INFO)
 SERIAL_TIMEOUT = 100.0  # seconds?
 RECONNECT_TIMEOUT_S = 30.0  # seconds
 SYNC_HEADER = bytes([0xEB, 0x90, 0xEB, 0x90, 0xEB, 0x90])
+QUERY_COMMAND = bytes([0x16, 0xA0, 0x00, 0x00, 0x00, 0x7F])
 
 MAX_READ_LENGTH = 1024
 
@@ -198,6 +199,14 @@ def parse_temp(data, offset):
   return int.from_bytes(data[offset: offset + 1], byteorder='little') - 30
 
 
+def read_now_ms():
+  return int(time.time() * 1000)
+
+
+def send_query_command(serial_client):
+  serial_client.send(SYNC_HEADER)
+  serial_client.send(QUERY_COMMAND)
+
 def main():
   init_logger_stdout()
 
@@ -216,6 +225,9 @@ def main():
   mqtt_qos = options_json.get('mqtt_publish_qos', 0)
   mqtt_retain = options_json.get('mqtt_publish_retain', True)
 
+  query_period_ms = options_json.get('query_period_sec', 600) * 1000
+  next_query_ms = read_now_ms()
+
   while True:
     LOG.info(
       'Start to listen to serial port and mqtt topic. '
@@ -224,6 +236,13 @@ def main():
 
     try:
       while True:
+        # Send query request periodically
+        now_ms = read_now_ms()
+        if query_period_ms > 0 and next_query_ms > now_ms:
+          next_query_ms = max(now_ms, next_query_ms + query_period_ms)
+          send_query_command(serial_client)
+
+        # Listen to new messages the rest of the time
         msg = read_serial_message(serial_client)
         if msg and msg.command == 0xA0:
           mqtt_client.publish(
