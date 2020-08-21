@@ -117,10 +117,12 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
   while True:
     last_bytes = serial_client.read(size=1)
     if not last_bytes:
+      LOG.info('Read timeout')
       return None  # Read timeout
 
     max_bytes -= 1
     if max_bytes <= 0:
+      LOG.info('No sync found')
       return None  # No sync found
 
     last_byte = last_bytes[0]
@@ -130,9 +132,12 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
       sync_offset = 1
     else:
       sync_offset = 0
+    LOG.info('Sync byte read. sync_offset: ' % sync_offset)
 
     if sync_offset >= len(SYNC_HEADER):
       break
+
+  LOG.info('Sync header recieved. sync_offset: ' % sync_offset)
 
   # Read header
   last_bytes = serial_client.read(size=3)
@@ -142,6 +147,7 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
   msg.controller_id = int.from_bytes(last_bytes[0:1], byteorder='little')
   msg.command = int.from_bytes(last_bytes[1:2], byteorder='little')
   msg.data_length = int.from_bytes(last_bytes[2:3], byteorder='little')
+  LOG.info('Header recieved. msg: ' % msg)
 
   # Read Data
   data = serial_client.read(size=msg.data_length)
@@ -149,6 +155,7 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
     return None  # Read timeout
   if msg.command == 0xA0:
     parse_sensor_data(data, msg)
+  LOG.info('Data read. msg: ' % msg)
 
   # Footer
   footer = serial_client.read(size=3)
@@ -157,6 +164,7 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
   msg.crc = int.from_bytes(footer[0:2], byteorder='little')
   if int.from_bytes(footer[3:3], byteorder='little') != 0x7F:
     return None  # Incorrect footer
+  LOG.info('Footer read. msg: ' % msg)
 
   return msg
 
@@ -236,6 +244,8 @@ def main():
 
     try:
       while True:
+        LOG.info('Main loop')
+
         # Send query request periodically
         now_ms = read_now_ms()
         if query_period_ms > 0 and next_query_ms > now_ms:
@@ -243,7 +253,10 @@ def main():
           send_query_command(serial_client)
 
         # Listen to new messages the rest of the time
+        LOG.info('Listening for next message.')
         msg = read_serial_message(serial_client)
+        LOG.info('Message: ' % msg)
+
         if msg and msg.command == 0xA0:
           mqtt_client.publish(
             mqtt_topic, msg.to_json(), qos=mqtt_qos, retain=mqtt_retain)
