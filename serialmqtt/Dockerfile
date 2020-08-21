@@ -11,7 +11,7 @@ COPY *.py /
 RUN chmod a+x /run.sh
 
 # Install python
-RUN apk add --no-cache python3
+RUN apk add --no-cache python3 py-pip
 
 # Install python requirements
 RUN pip3 install -r requirements.txt
