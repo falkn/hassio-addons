@@ -3,9 +3,8 @@
   "version": "0.1",
   "slug": "epsolar_tracer",
   "description": "Reads solar charger data from EP-Solar MPPT Tracer MT-5 and pass to MQTT.",
-  "url": "https://github.com/falkn/hassio-addons/tree/master/epsolar_tracer",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
-  "startup": "before",„
+  "startup": "before",
   "boot": "auto",
   "map": ["config:rw", "ssl"],
   "options": {
@@ -27,7 +26,6 @@
     "mqtt_topic": "str",
     "mqtt_publish_qos": "int",
     "mqtt_publish_retain": "bool",
-    "mqtt_subscribe_topic": "str",
     "serial_port": "str",
     "serial_baud": "int",
     "verify_crc": "bool",
