@@ -3,7 +3,7 @@
   "version": "0.1",
   "slug": "epsolar_tracer",
   "description": "Reads solar charger data from EP-Solar MPPT Tracer MT-5. Pass to MQTT.",
-  "arch": ["armv7"],
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "startup": "services",
   "services": [
     "mqtt:want"
