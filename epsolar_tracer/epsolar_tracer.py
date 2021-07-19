@@ -280,8 +280,9 @@ def main(argv):
             mqtt_topic_msg, msg.to_json(), qos=mqtt_qos, retain=mqtt_retain)
           if log_msg_left:
             LOG.info(
-              'Picked up message and published to MQTT! (Only first messages '
-              'logged) topic %s: %s', mqtt_topic_msg, msg.to_json())
+              'Picked up message and published to MQTT! (Only first %d '
+              'messages logged) topic %s: %s',
+              LOG_FIRST_N_MSG, mqtt_topic_msg, msg.to_json())
             log_msg_left = -1
 
     except serial.SerialException as se:
