@@ -258,7 +258,7 @@ def main(argv):
 
   while True:
     LOG.info(
-      'Start to listen to serial port %s and mqtt topic. '
+      'Start to listen to serial port %s. '
       'serial_client.is_open: %s',
       options_json.get('serial_port', '/dev/ttyUSB0'), serial_client.is_open)
 
