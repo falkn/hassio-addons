@@ -48,11 +48,11 @@ def init_mqtt_client(options_json):
   LOG.info('Parsing MQTT URL %s', mqtt_address)
 
   mqtt_url = urlparse(mqtt_address)
-  #  if mqtt_url.scheme != 'mqtt':
-  #    LOG.fatal(
-  #      'Incorrect option mqtt_address, expecting mqtt protocol, got %s. '
-  #      'Example: "mqtt://homeassistant"', mqtt_url.scheme)
-  #    sys.exit(1)
+  if mqtt_url.scheme != 'mqtt':
+    LOG.fatal(
+      'Incorrect option mqtt_address, expecting mqtt protocol, got %s. '
+      'Example: "mqtt://homeassistant"', mqtt_url.scheme)
+    sys.exit(1)
 
   LOG.info('Connecting to MQTT %s', mqtt_address)
 
