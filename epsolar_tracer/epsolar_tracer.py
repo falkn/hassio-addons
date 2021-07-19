@@ -28,6 +28,7 @@ QUERY_COMMAND = bytes([0x16, 0xA0, 0x00, 0x00, 0x00, 0x7F])
 
 MAX_READ_LENGTH = 1024
 
+LOG_FIRST_N_MSG = 2
 
 def init_logger_stdout():
   handler = logging.StreamHandler(sys.stdout)
@@ -125,12 +126,12 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
   while True:
     last_bytes = serial_client.read(size=1)
     if not last_bytes:
-      LOG.info('Read timeout')
+      LOG.debug('Read timeout')
       return None  # Read timeout
 
     max_bytes -= 1
     if max_bytes <= 0:
-      LOG.info('No sync found')
+      LOG.debug('No sync found')
       return None  # No sync found
 
     last_byte = last_bytes[0]
@@ -140,12 +141,12 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
       sync_offset = 1
     else:
       sync_offset = 0
-    LOG.info('Sync byte read. sync_offset: %s', sync_offset)
+    LOG.debug('Sync byte read. sync_offset: %s', sync_offset)
 
     if sync_offset >= len(SYNC_HEADER):
       break
 
-  LOG.info('Sync header recieved. sync_offset: %s', sync_offset)
+  LOG.debug('Sync header received. sync_offset: %s', sync_offset)
 
   # Read header
   last_bytes = serial_client.read(size=3)
@@ -155,27 +156,27 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
   msg.controller_id = int.from_bytes(last_bytes[0:1], byteorder='little')
   msg.command = int.from_bytes(last_bytes[1:2], byteorder='little')
   msg.data_length = int.from_bytes(last_bytes[2:3], byteorder='little')
-  LOG.info('Header received. msg: %s', msg)
+  LOG.debug('Header received. msg: %s', msg)
 
   # Read Data
   data = serial_client.read(size=msg.data_length)
   if len(data) < msg.data_length:
-    LOG.info('Too short message (%d), or read timeout.', len(data))
+    LOG.debug('Too short message (%d), or read timeout.', len(data))
     return None  # Read timeout
   if msg.command == 0xA0:
     parse_sensor_data(data, msg)
-  LOG.info('Data read. msg: %s',  msg)
+  LOG.debug('Data read. msg: %s',  msg)
 
   # Footer
   footer = serial_client.read(size=3)
   if len(footer) < 3:
-    LOG.info('Too short footer (%d), or read timeout.', len(footer))
+    LOG.debug('Too short footer (%d), or read timeout.', len(footer))
     return None  # Read timeout
   msg.crc = int.from_bytes(footer[0:2], byteorder='little')
   if int.from_bytes(footer[2:3], byteorder='little') != 0x7F:
-    LOG.info('Incorrect footer: %d', footer[2:3])
+    LOG.debug('Incorrect footer: %d', footer[2:3])
     return None  # Incorrect footer
-  LOG.info('Footer read. msg: %s', msg)
+  LOG.debug('Footer read. msg: %s', msg)
 
   return msg
 
@@ -231,7 +232,6 @@ def main(argv):
 
   LOG.info('EPSolar Tracer starting...')
 
-  LOG.info('Reading options.json')
   with open('/data/options.json') as options_file:
     options_json = json.load(options_file)
 
@@ -254,17 +254,16 @@ def main(argv):
 
   query_period_ms = options_json.get('query_period_sec', 600) * 1000
   next_query_ms = read_now_ms()
+  log_msg_left = LOG_FIRST_N_MSG
 
   while True:
     LOG.info(
-      'Start to listen to serial port %s and mqtt topic. '
+      'Start to listen to serial port %s. '
       'serial_client.is_open: %s',
       options_json.get('serial_port', '/dev/ttyUSB0'), serial_client.is_open)
 
     try:
       while True:
-        LOG.info('Main loop')
-
         # Send query request periodically
         now_ms = read_now_ms()
         if query_period_ms > 0 and next_query_ms > now_ms:
@@ -272,14 +271,17 @@ def main(argv):
           send_query_command(serial_client)
 
         # Listen to new messages the rest of the time
-        LOG.info('Listening for next message.')
         msg = read_serial_message(serial_client)
-        LOG.info('Message: %s', msg.to_json() if msg is not None else 'None')
 
         if msg and msg.command == 0xA0:
           mqtt_client.publish(
             mqtt_topic_msg, msg.to_json(), qos=mqtt_qos, retain=mqtt_retain)
-          LOG.info('Published to MQTT topic %s', mqtt_topic)
+          if log_msg_left:
+            LOG.info(
+              'Picked up message and published to MQTT! (Only first %d '
+              'messages logged) topic %s: %s',
+              LOG_FIRST_N_MSG, mqtt_topic_msg, msg.to_json())
+            log_msg_left -= 1
 
     except serial.SerialException as se:
       LOG.warning('Serial disconnected: %s', str(se))
