@@ -1,2 +1,2 @@
-paho-mqtt==1
-pyserial==3
+paho-mqtt
+pyserial

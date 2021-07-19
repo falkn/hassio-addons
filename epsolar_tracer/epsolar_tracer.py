@@ -44,22 +44,29 @@ def init_mqtt_client(options_json):
     options_json.get('mqtt_username', 'mqtt'),
     options_json.get('mqtt_password', ''))
 
-  mqtt_address = options_json.get('mqtt_address', 'mqtt://homeassistant')
+  mqtt_address = options_json.get('mqtt_address', 'mqtt://homeassistant.local')
+  LOG.info('Parsing MQTT URL %s', mqtt_address)
+
   mqtt_url = urlparse(mqtt_address)
-  if mqtt_url.scheme != 'mqtt':
-    LOG.fatal(
-      'Incorrect option mqtt_address, expecting mqtt protocol, got %s. '
-      'Example: "mqtt://homeassistant"', mqtt_url.scheme)
-    sys.exit(1)
+  #  if mqtt_url.scheme != 'mqtt':
+  #    LOG.fatal(
+  #      'Incorrect option mqtt_address, expecting mqtt protocol, got %s. '
+  #      'Example: "mqtt://homeassistant"', mqtt_url.scheme)
+  #    sys.exit(1)
+
+  LOG.info('Connecting to MQTT %s', mqtt_address)
 
   mqtt_client.connect(mqtt_url.hostname, mqtt_url.port or 1883)
+
+  LOG.info('Connected to MQTT %s', mqtt_address)
+
   return mqtt_client
 
 
 def create_serial_client(options_json):
   return serial.Serial(
       options_json.get('serial_port', '/dev/ttyUSB0'),
-      options_json.get('serial_baud', 74880),
+      options_json.get('serial_baud', 9600),
       timeout=SERIAL_TIMEOUT,
       write_timeout=SERIAL_TIMEOUT)
 
@@ -105,6 +112,9 @@ class TracerMsg(object):
 
     # Data
 
+  def __str__(self):
+    return 'TrackerMsg%s' % self.to_json()
+
   def to_json(self):
     return json.dumps(self.__dict__)
 
@@ -132,12 +142,12 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
       sync_offset = 1
     else:
       sync_offset = 0
-    LOG.info('Sync byte read. sync_offset: ' % sync_offset)
+    LOG.info('Sync byte read. sync_offset: %s', sync_offset)
 
     if sync_offset >= len(SYNC_HEADER):
       break
 
-  LOG.info('Sync header recieved. sync_offset: ' % sync_offset)
+  LOG.info('Sync header recieved. sync_offset: %s', sync_offset)
 
   # Read header
   last_bytes = serial_client.read(size=3)
@@ -147,24 +157,27 @@ def read_serial_message(serial_client, max_bytes=MAX_READ_LENGTH):
   msg.controller_id = int.from_bytes(last_bytes[0:1], byteorder='little')
   msg.command = int.from_bytes(last_bytes[1:2], byteorder='little')
   msg.data_length = int.from_bytes(last_bytes[2:3], byteorder='little')
-  LOG.info('Header recieved. msg: ' % msg)
+  LOG.info('Header received. msg: %s', msg)
 
   # Read Data
   data = serial_client.read(size=msg.data_length)
-  if len(last_bytes) < msg.data_length:
+  if len(data) < msg.data_length:
+    LOG.info('Too short message (%d), or read timeout.', len(data))
     return None  # Read timeout
   if msg.command == 0xA0:
     parse_sensor_data(data, msg)
-  LOG.info('Data read. msg: ' % msg)
+  LOG.info('Data read. msg: %s',  msg)
 
   # Footer
   footer = serial_client.read(size=3)
   if len(footer) < 3:
+    LOG.info('Too short footer (%d), or read timeout.', len(footer))
     return None  # Read timeout
   msg.crc = int.from_bytes(footer[0:2], byteorder='little')
-  if int.from_bytes(footer[3:3], byteorder='little') != 0x7F:
+  if int.from_bytes(footer[2:3], byteorder='little') != 0x7F:
+    LOG.info('Incorrect footer: %d', footer[2:3])
     return None  # Incorrect footer
-  LOG.info('Footer read. msg: ' % msg)
+  LOG.info('Footer read. msg: %s', msg)
 
   return msg
 
@@ -232,15 +245,18 @@ def main():
   mqtt_topic = options_json.get('mqtt_topic', 'solartracer/read')
   mqtt_qos = options_json.get('mqtt_publish_qos', 0)
   mqtt_retain = options_json.get('mqtt_publish_retain', True)
+  mqtt_client.publish(
+    mqtt_topic, "init-epsolar-tracer", qos=mqtt_qos, retain=mqtt_retain)
+  LOG.info('MQTT Published init messsage to: %s', mqtt_topic)
 
   query_period_ms = options_json.get('query_period_sec', 600) * 1000
   next_query_ms = read_now_ms()
 
   while True:
     LOG.info(
-      'Start to listen to serial port and mqtt topic. '
+      'Start to listen to serial port %s and mqtt topic. '
       'serial_client.is_open: %s',
-      serial_client.is_open)
+      options_json.get('serial_port', '/dev/ttyUSB0'), serial_client.is_open)
 
     try:
       while True:
@@ -255,16 +271,17 @@ def main():
         # Listen to new messages the rest of the time
         LOG.info('Listening for next message.')
         msg = read_serial_message(serial_client)
-        LOG.info('Message: ' % msg)
+        LOG.info('Message: %s', msg.to_json() if msg is not None else 'None')
 
         if msg and msg.command == 0xA0:
           mqtt_client.publish(
             mqtt_topic, msg.to_json(), qos=mqtt_qos, retain=mqtt_retain)
+          LOG.info('Published to MQTT topic %s', mqtt_topic)
 
     except serial.SerialException as se:
       LOG.warning('Serial disconnected: %s', str(se))
-    except serial.Exception as e:
-      LOG.warning('Serial disconnected: %s', e)
+    except Exception as e:
+      LOG.warning('Exception: %s', e)
     finally:
       serial_client.close()
 
