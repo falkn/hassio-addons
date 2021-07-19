@@ -281,7 +281,7 @@ def main(argv):
               'Picked up message and published to MQTT! (Only first %d '
               'messages logged) topic %s: %s',
               LOG_FIRST_N_MSG, mqtt_topic_msg, msg.to_json())
-            log_msg_left = -1
+            log_msg_left -= 1
 
     except serial.SerialException as se:
       LOG.warning('Serial disconnected: %s', str(se))
