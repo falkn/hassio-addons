@@ -8,16 +8,13 @@
   "services": [
     "mqtt:want"
   ],
-  "host_network": true,
   "boot": "auto",
-  "map": ["config:rw", "ssl", "share:rw"],
-  "udev": true,
-  "hassio_role": "homeassistant",
+  "map": ["config:rw", "ssl"],
   "options": {
 	"mqtt_address" : "mqtt://homeassistant",
 	"mqtt_username" : "mqtt",
 	"mqtt_password" : "",
-    "mqtt_topic": "epsolar_tracer/",
+    "mqtt_topic": "epsolar_tracer/read",
     "mqtt_publish_qos": 0,
     "mqtt_publish_retain": true,
     "serial_port": "/dev/ttyUSB0",
