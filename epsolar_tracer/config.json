@@ -1,0 +1,41 @@
+{
+  "name": "EPSolar Tracer MT-5",
+  "version": "0.1",
+  "slug": "epsolar_tracer",
+  "description": "Reads solar charger data from EP-Solar MPPT Tracer MT-5. Pass to MQTT.",
+  "arch": ["armv7"],
+  "startup": "before",
+  "services": [
+    "mqtt:want"
+  ],
+  "host_network": true,
+  "boot": "auto",
+  "map": ["config:rw", "ssl", "share:rw"],
+  "udev": true,
+  "hassio_role": "homeassistant",
+  "options": {
+	"mqtt_address" : "mqtt://homeassistant",
+	"mqtt_username" : "mqtt",
+	"mqtt_password" : "",
+    "mqtt_topic": "epsolar_tracer/",
+    "mqtt_publish_qos": 0,
+    "mqtt_publish_retain": true,
+    "serial_port": "/dev/ttyUSB0",
+    "serial_baud": 9600,
+    "verify_crc": false,
+    "query_period_sec": -1
+  },
+  "schema": {
+    "mqtt_address": "url",
+    "mqtt_username": "str",
+    "mqtt_password": "password",
+    "mqtt_topic": "str",
+    "mqtt_publish_qos": "int",
+    "mqtt_publish_retain": "bool",
+    "serial_port": "str",
+    "serial_baud": "int",
+    "verify_crc": "bool",
+    "query_period_sec": "int"
+  },
+  "uart": "yes"
+}
