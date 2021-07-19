@@ -264,8 +264,6 @@ def main(argv):
 
     try:
       while True:
-        LOG.info('Main loop')
-
         # Send query request periodically
         now_ms = read_now_ms()
         if query_period_ms > 0 and next_query_ms > now_ms:
