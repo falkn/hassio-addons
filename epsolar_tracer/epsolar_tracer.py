@@ -48,11 +48,11 @@ def init_mqtt_client(options_json):
   LOG.info('Parsing MQTT URL %s', mqtt_address)
 
   mqtt_url = urlparse(mqtt_address)
-  #  if mqtt_url.scheme != 'mqtt':
-  #    LOG.fatal(
-  #      'Incorrect option mqtt_address, expecting mqtt protocol, got %s. '
-  #      'Example: "mqtt://homeassistant"', mqtt_url.scheme)
-  #    sys.exit(1)
+  if mqtt_url.scheme != 'mqtt':
+    LOG.fatal(
+      'Incorrect option mqtt_address, expecting mqtt protocol, got %s. '
+      'Example: "mqtt://homeassistant"', mqtt_url.scheme)
+    sys.exit(1)
 
   LOG.info('Connecting to MQTT %s', mqtt_address)
 
@@ -242,12 +242,14 @@ def main():
 
   LOG.info('Init MQTT client')
   mqtt_client = init_mqtt_client(options_json)
-  mqtt_topic = options_json.get('mqtt_topic', 'solartracer/read')
+  mqtt_topic = options_json.get('mqtt_topic', 'epsolar_tracer/')
+  mqtt_topic_msg = '%s/read' % mqtt_topic.removesuffix('/')
+  mqtt_topic_online = '%s/online' % mqtt_topic.removesuffix('/')
   mqtt_qos = options_json.get('mqtt_publish_qos', 0)
   mqtt_retain = options_json.get('mqtt_publish_retain', True)
   mqtt_client.publish(
-    mqtt_topic, "init-epsolar-tracer", qos=mqtt_qos, retain=mqtt_retain)
-  LOG.info('MQTT Published init messsage to: %s', mqtt_topic)
+    mqtt_topic_online, "{\"online\": true}", qos=mqtt_qos, retain=mqtt_retain)
+  LOG.info('MQTT Published init messsage to: %s', mqtt_topic_online)
 
   query_period_ms = options_json.get('query_period_sec', 600) * 1000
   next_query_ms = read_now_ms()
@@ -275,7 +277,7 @@ def main():
 
         if msg and msg.command == 0xA0:
           mqtt_client.publish(
-            mqtt_topic, msg.to_json(), qos=mqtt_qos, retain=mqtt_retain)
+            mqtt_topic_msg, msg.to_json(), qos=mqtt_qos, retain=mqtt_retain)
           LOG.info('Published to MQTT topic %s', mqtt_topic)
 
     except serial.SerialException as se:
@@ -288,6 +290,9 @@ def main():
     # Reconnection loop
     LOG.info('Disconnected, will attempt reconnect.')
     reconnect_serial_client(serial_client)
+
+  mqtt_client.publish(
+    mqtt_topic_online, "{\"online\": false}", qos=mqtt_qos, retain=mqtt_retain)
 
 
 if __name__ == "__main__":
