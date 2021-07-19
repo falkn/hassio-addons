@@ -38,27 +38,25 @@ def init_logger_stdout():
   LOG.addHandler(handler)
 
 
-def init_mqtt_client(options_json):
+def init_mqtt_client(mqtt_url):
   mqtt_client = mqtt.Client()
-  mqtt_client.username_pw_set(
-    options_json.get('mqtt_username', 'mqtt'),
-    options_json.get('mqtt_password', ''))
+  LOG.info('Parsing MQTT URL %s', mqtt_url)
 
-  mqtt_address = options_json.get('mqtt_address', 'mqtt://homeassistant.local')
-  LOG.info('Parsing MQTT URL %s', mqtt_address)
-
-  mqtt_url = urlparse(mqtt_address)
-  if mqtt_url.scheme != 'mqtt':
+  mqtt_url_parsed = urlparse(mqtt_url)
+  if mqtt_url_parsed.scheme != 'mqtt':
     LOG.fatal(
       'Incorrect option mqtt_address, expecting mqtt protocol, got %s. '
-      'Example: "mqtt://homeassistant"', mqtt_url.scheme)
+      'Example: "mqtt://homeassistant"', mqtt_url_parsed.scheme)
     sys.exit(1)
 
-  LOG.info('Connecting to MQTT %s', mqtt_address)
+  mqtt_client.username_pw_set(
+    mqtt_url_parsed.username, mqtt_url_parsed.password)
 
-  mqtt_client.connect(mqtt_url.hostname, mqtt_url.port or 1883)
+  mqtt_client.connect(
+    mqtt_url_parsed.hostname or 'homeassistant',
+    mqtt_url_parsed.port or 1883)
 
-  LOG.info('Connected to MQTT %s', mqtt_address)
+  LOG.info('Connected to MQTT %s', mqtt_url)
 
   return mqtt_client
 
@@ -228,10 +226,10 @@ def send_query_command(serial_client):
   serial_client.send(SYNC_HEADER)
   serial_client.send(QUERY_COMMAND)
 
-def main():
+def main(argv):
   init_logger_stdout()
 
-  LOG.info('Serial2Mqtt starting...')
+  LOG.info('EPSolar Tracer starting...')
 
   LOG.info('Reading options.json')
   with open('/data/options.json') as options_file:
@@ -241,7 +239,10 @@ def main():
   serial_client = init_serial_client(options_json)
 
   LOG.info('Init MQTT client')
-  mqtt_client = init_mqtt_client(options_json)
+  if len(argv) < 2:
+    LOG.fatal('Missing cli argument mqtt_url. Usage: epsolar_tracer <mqtt_url>')
+    return 1
+  mqtt_client = init_mqtt_client(argv[1])
   mqtt_topic = options_json.get('mqtt_topic', 'epsolar_tracer/')
   mqtt_topic_msg = '%s/read' % mqtt_topic.removesuffix('/')
   mqtt_topic_online = '%s/online' % mqtt_topic.removesuffix('/')
@@ -296,4 +297,4 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  main(sys.argv)
