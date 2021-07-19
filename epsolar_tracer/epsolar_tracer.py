@@ -28,6 +28,7 @@ QUERY_COMMAND = bytes([0x16, 0xA0, 0x00, 0x00, 0x00, 0x7F])
 
 MAX_READ_LENGTH = 1024
 
+LOG_FIRST_N_MSG = 2
 
 def init_logger_stdout():
   handler = logging.StreamHandler(sys.stdout)
@@ -231,7 +232,6 @@ def main(argv):
 
   LOG.info('EPSolar Tracer starting...')
 
-  LOG.info('Reading options.json')
   with open('/data/options.json') as options_file:
     options_json = json.load(options_file)
 
@@ -254,6 +254,7 @@ def main(argv):
 
   query_period_ms = options_json.get('query_period_sec', 600) * 1000
   next_query_ms = read_now_ms()
+  log_msg_left = LOG_FIRST_N_MSG
 
   while True:
     LOG.info(
@@ -272,14 +273,16 @@ def main(argv):
           send_query_command(serial_client)
 
         # Listen to new messages the rest of the time
-        LOG.info('Listening for next message.')
         msg = read_serial_message(serial_client)
-        LOG.info('Message: %s', msg.to_json() if msg is not None else 'None')
 
         if msg and msg.command == 0xA0:
           mqtt_client.publish(
             mqtt_topic_msg, msg.to_json(), qos=mqtt_qos, retain=mqtt_retain)
-          LOG.info('Published to MQTT topic %s', mqtt_topic)
+          if log_msg_left:
+            LOG.info(
+              'Picked up message and published to MQTT! (Only first messages '
+              'logged) topic %s: %s', mqtt_topic_msg, msg.to_json())
+            log_msg_left = -1
 
     except serial.SerialException as se:
       LOG.warning('Serial disconnected: %s', str(se))
