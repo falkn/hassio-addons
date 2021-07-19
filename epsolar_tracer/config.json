@@ -14,7 +14,7 @@
 	"mqtt_address" : "mqtt://homeassistant",
 	"mqtt_username" : "mqtt",
 	"mqtt_password" : "",
-    "mqtt_topic": "epsolar_tracer/read",
+    "mqtt_topic": "epsolar_tracer/",
     "mqtt_publish_qos": 0,
     "mqtt_publish_retain": true,
     "serial_port": "/dev/ttyUSB0",
